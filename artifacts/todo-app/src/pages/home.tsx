@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useListTodos, getListTodosQueryKey } from "@workspace/api-client-react";
+import { useListTodos, getListTodosQueryKey, useGetTodoStats, getGetTodoStatsQueryKey } from "@workspace/api-client-react";
 import { TodoList } from "../components/todo/todo-list";
 import { CreateTodo } from "../components/todo/create-todo";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -19,12 +19,31 @@ export function HomePage() {
     query: { queryKey: getListTodosQueryKey(queryParams) }
   });
 
+  const { data: stats } = useGetTodoStats({
+    query: { queryKey: getGetTodoStatsQueryKey() }
+  });
+
+  const allDone = stats && stats.total > 0 && stats.active === 0;
+
   return (
     <div className="p-6 md:p-12 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <header>
         <h2 className="text-3xl font-serif font-bold text-foreground">Today's Tasks</h2>
         <p className="text-muted-foreground mt-2">What needs your attention today?</p>
       </header>
+
+      {allDone && (
+        <div className="relative overflow-hidden rounded-2xl bg-primary px-8 py-8 text-primary-foreground animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="relative z-10">
+            <p className="text-xs font-semibold uppercase tracking-widest opacity-75 mb-2">All tasks complete</p>
+            <h3 className="text-2xl font-serif font-bold mb-1">Well done!</h3>
+            <p className="text-sm opacity-80">You've finished everything for today. Rest up and come back tomorrow.</p>
+          </div>
+          <div className="absolute right-6 top-1/2 -translate-y-1/2 text-[80px] leading-none select-none opacity-20 font-serif">
+            ✓
+          </div>
+        </div>
+      )}
 
       <CreateTodo />
 
