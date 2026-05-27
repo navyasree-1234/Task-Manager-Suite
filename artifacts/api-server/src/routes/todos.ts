@@ -37,6 +37,15 @@ function serializeTodo(todo: DbTodo) {
   };
 }
 
+router.delete("/todos/clear-completed", async (_req, res): Promise<void> => {
+  const deleted = await db
+    .delete(todosTable)
+    .where(eq(todosTable.completed, true))
+    .returning();
+
+  res.json({ deleted: deleted.length });
+});
+
 router.get("/todos/stats", async (_req, res): Promise<void> => {
   const now = new Date();
   const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);

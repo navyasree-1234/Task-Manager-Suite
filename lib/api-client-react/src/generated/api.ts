@@ -20,6 +20,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  ClearCompletedResult,
   HealthStatus,
   ListTodosParams,
   Todo,
@@ -271,6 +272,76 @@ export const useCreateTodo = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getCreateTodoMutationOptions(options));
+    }
+
+export const getClearCompletedUrl = () => {
+
+
+
+
+  return `/api/todos/clear-completed`
+}
+
+/**
+ * @summary Delete all completed todos
+ */
+export const clearCompleted = async ( options?: RequestInit): Promise<ClearCompletedResult> => {
+
+  return customFetch<ClearCompletedResult>(getClearCompletedUrl(),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getClearCompletedMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof clearCompleted>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof clearCompleted>>, TError,void, TContext> => {
+
+const mutationKey = ['clearCompleted'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof clearCompleted>>, void> = () => {
+
+
+          return  clearCompleted(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ClearCompletedMutationResult = NonNullable<Awaited<ReturnType<typeof clearCompleted>>>
+
+    export type ClearCompletedMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete all completed todos
+ */
+export const useClearCompleted = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof clearCompleted>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof clearCompleted>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getClearCompletedMutationOptions(options));
     }
 
 export const getGetTodoStatsUrl = () => {

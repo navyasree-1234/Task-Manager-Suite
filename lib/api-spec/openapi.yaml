@@ -72,6 +72,19 @@ paths:
               schema:
                 $ref: "#/components/schemas/Todo"
 
+  /todos/clear-completed:
+    delete:
+      operationId: clearCompleted
+      tags: [todos]
+      summary: Delete all completed todos
+      responses:
+        "200":
+          description: Number of deleted todos
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClearCompletedResult"
+
   /todos/stats:
     get:
       operationId: getTodoStats
@@ -235,6 +248,14 @@ components:
           enum: [low, medium, high]
         dueDate:
           type: ["string", "null"]
+
+    ClearCompletedResult:
+      type: object
+      required:
+        - deleted
+      properties:
+        deleted:
+          type: integer
 
     TodoStats:
       type: object

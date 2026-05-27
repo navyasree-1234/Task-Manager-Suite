@@ -68,6 +68,10 @@ export interface TodoUpdate {
   dueDate?: string | null;
 }
 
+export interface ClearCompletedResult {
+  deleted: number;
+}
+
 export interface TodoStats {
   total: number;
   completed: number;

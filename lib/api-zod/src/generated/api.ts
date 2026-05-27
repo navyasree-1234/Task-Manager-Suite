@@ -53,6 +53,14 @@ export const CreateTodoBody = zod.object({
 
 
 /**
+ * @summary Delete all completed todos
+ */
+export const ClearCompletedResponse = zod.object({
+  "deleted": zod.number()
+})
+
+
+/**
  * @summary Get todo statistics
  */
 export const GetTodoStatsResponse = zod.object({
