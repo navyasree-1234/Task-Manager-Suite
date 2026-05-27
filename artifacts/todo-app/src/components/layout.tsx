@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { CheckSquare, BarChart2, Notebook } from "lucide-react";
+import { CheckSquare, BarChart2, Notebook, CalendarDays } from "lucide-react";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
@@ -20,6 +20,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <div data-testid="link-home" className={`flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors cursor-pointer ${location === "/" ? "bg-accent text-accent-foreground font-medium" : "text-muted-foreground hover:text-foreground hover:bg-accent/50"}`}>
               <CheckSquare size={18} />
               <span>Tasks</span>
+            </div>
+          </Link>
+          <Link href="/calendar">
+            <div data-testid="link-calendar" className={`flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors cursor-pointer ${location === "/calendar" ? "bg-accent text-accent-foreground font-medium" : "text-muted-foreground hover:text-foreground hover:bg-accent/50"}`}>
+              <CalendarDays size={18} />
+              <span>Calendar</span>
             </div>
           </Link>
           <Link href="/stats">
