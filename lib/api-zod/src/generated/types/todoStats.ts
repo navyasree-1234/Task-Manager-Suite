@@ -6,6 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface HealthStatus {
-  status: string;
+export interface TodoStats {
+  total: number;
+  completed: number;
+  active: number;
+  highPriority: number;
+  dueSoon: number;
 }
