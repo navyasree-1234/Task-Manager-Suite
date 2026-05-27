@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "I4LwcLQcutHXCBymhpohP"
+uri = "file://taskbook-source-code.pdf"
+type = "pdf"
+title = "Taskbook — Full Source Code"
