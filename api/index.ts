@@ -1,5 +1,5 @@
 import app from "../artifacts/api-server/src/app";
-import { initDb } from "@workspace/db";
+import { initDb } from "../lib/db/src/index";
 
 let isDbInitialized = false;
 
@@ -8,5 +8,5 @@ export default async function handler(req: any, res: any) {
     await initDb();
     isDbInitialized = true;
   }
-  return app(req, res);
+  return (app as any)(req, res);
 }
