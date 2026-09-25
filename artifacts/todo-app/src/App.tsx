@@ -7,16 +7,39 @@ import { Layout } from "./components/layout";
 import { HomePage } from "./pages/home";
 import { StatsPage } from "./pages/stats";
 import { CalendarPage } from "./pages/calendar";
+import { LoginPage } from "./pages/login";
+import { RegisterPage } from "./pages/register";
+import { AuthProvider } from "./context/auth-context";
+import { ProtectedRoute, PublicOnlyRoute } from "./components/protected-route";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 function Router() {
   return (
     <Layout>
       <Switch>
-        <Route path="/" component={HomePage} />
-        <Route path="/stats" component={StatsPage} />
-        <Route path="/calendar" component={CalendarPage} />
+        <Route path="/login">
+          {() => <PublicOnlyRoute component={LoginPage} />}
+        </Route>
+        <Route path="/register">
+          {() => <PublicOnlyRoute component={RegisterPage} />}
+        </Route>
+        <Route path="/">
+          {() => <ProtectedRoute component={HomePage} />}
+        </Route>
+        <Route path="/stats">
+          {() => <ProtectedRoute component={StatsPage} />}
+        </Route>
+        <Route path="/calendar">
+          {() => <ProtectedRoute component={CalendarPage} />}
+        </Route>
         <Route component={NotFound} />
       </Switch>
     </Layout>
@@ -26,12 +49,14 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-          <Router />
-        </WouterRouter>
-        <Toaster />
-      </TooltipProvider>
+      <AuthProvider>
+        <TooltipProvider>
+          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+            <Router />
+          </WouterRouter>
+          <Toaster />
+        </TooltipProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

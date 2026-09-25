@@ -1,11 +1,12 @@
-import { pgTable, text, serial, timestamp, boolean } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
-import { z } from "zod/v4";
+import { pgTable, text, serial, timestamp, boolean, integer } from "drizzle-orm/pg-core";
+import { usersTable } from "./users";
 
 export const todosTable = pgTable("todos", {
   id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => usersTable.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
   description: text("description"),
+  status: text("status", { enum: ["todo", "in-progress", "completed"] }).notNull().default("todo"),
   completed: boolean("completed").notNull().default(false),
   priority: text("priority", { enum: ["low", "medium", "high"] }).notNull().default("medium"),
   dueDate: text("due_date"),
@@ -13,10 +14,5 @@ export const todosTable = pgTable("todos", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });
 
-export const insertTodoSchema = createInsertSchema(todosTable).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-export type InsertTodo = z.infer<typeof insertTodoSchema>;
 export type Todo = typeof todosTable.$inferSelect;
+export type InsertTodo = typeof todosTable.$inferInsert;

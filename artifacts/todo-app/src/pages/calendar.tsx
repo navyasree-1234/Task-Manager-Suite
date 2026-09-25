@@ -1,11 +1,12 @@
 import { useState } from "react";
 import {
-  useListTodos,
-  getListTodosQueryKey,
-  getGetTodoStatsQueryKey,
-  useCreateTodo,
-  useToggleTodoComplete,
-  useDeleteTodo,
+  useListTasks,
+  getListTasksQueryKey,
+  getGetTaskStatsQueryKey,
+  useCreateTask,
+  useToggleTaskComplete,
+  useDeleteTask,
+  Task,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -18,9 +19,7 @@ import {
   Plus,
   Check,
   Trash2,
-  X,
 } from "lucide-react";
-import type { Todo } from "@workspace/api-client-react";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTHS = [
@@ -51,17 +50,17 @@ export function CalendarPage() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  const { data: todos = [] } = useListTodos(
+  const { data: tasks = [] } = useListTasks(
     {},
-    { query: { queryKey: getListTodosQueryKey() } }
+    { query: { queryKey: getListTasksQueryKey() } }
   );
 
-  const createTodo = useCreateTodo({
+  const createTask = useCreateTask({
     mutation: {
       onSuccess: () => {
         setNewTitle("");
-        queryClient.invalidateQueries({ queryKey: getListTodosQueryKey() });
-        queryClient.invalidateQueries({ queryKey: getGetTodoStatsQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getListTasksQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getGetTaskStatsQueryKey() });
       },
       onError: () => {
         toast({ title: "Error", description: "Could not add task.", variant: "destructive" });
@@ -69,20 +68,20 @@ export function CalendarPage() {
     },
   });
 
-  const toggleComplete = useToggleTodoComplete({
+  const toggleComplete = useToggleTaskComplete({
     mutation: {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: getListTodosQueryKey() });
-        queryClient.invalidateQueries({ queryKey: getGetTodoStatsQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getListTasksQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getGetTaskStatsQueryKey() });
       },
     },
   });
 
-  const deleteTodo = useDeleteTodo({
+  const deleteTask = useDeleteTask({
     mutation: {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: getListTodosQueryKey() });
-        queryClient.invalidateQueries({ queryKey: getGetTodoStatsQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getListTasksQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getGetTaskStatsQueryKey() });
       },
     },
   });
@@ -99,13 +98,13 @@ export function CalendarPage() {
   ];
   while (cells.length % 7 !== 0) cells.push(null);
 
-  function todosForDate(date: Date): Todo[] {
+  function tasksForDate(date: Date): Task[] {
     const str = toDateStr(date);
-    return todos.filter((t) => t.dueDate === str);
+    return tasks.filter((t: any) => t.dueDate === str);
   }
 
   const selectedDateStr = toDateStr(selectedDate);
-  const selectedTodos = todos.filter((t) => t.dueDate === selectedDateStr);
+  const selectedTasks = tasks.filter((t: any) => t.dueDate === selectedDateStr);
 
   function prevMonth() {
     setViewDate(new Date(year, month - 1, 1));
@@ -117,8 +116,8 @@ export function CalendarPage() {
   function handleAddTask(e: React.FormEvent) {
     e.preventDefault();
     const trimmed = newTitle.trim();
-    if (!trimmed || createTodo.isPending) return;
-    createTodo.mutate({
+    if (!trimmed || createTask.isPending) return;
+    createTask.mutate({
       data: { title: trimmed, priority: "medium", dueDate: selectedDateStr },
     });
   }
@@ -131,37 +130,37 @@ export function CalendarPage() {
     <div className="p-6 md:p-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <header className="mb-8">
         <h2 className="text-3xl font-serif font-bold text-foreground">Calendar</h2>
-        <p className="text-muted-foreground mt-1">Pin major tasks to specific days.</p>
+        <p className="text-muted-foreground mt-1">Pin tasks to specific due dates and track your schedule.</p>
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
         {/* Calendar grid */}
-        <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden">
+        <div className="bg-card border border-border/80 rounded-2xl shadow-sm overflow-hidden">
           {/* Month nav */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-border">
             <button
               onClick={prevMonth}
-              className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+              className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
             >
               <ChevronLeft size={18} />
             </button>
-            <h3 className="text-base font-semibold text-foreground">
+            <h3 className="text-base font-bold text-foreground">
               {MONTHS[month]} {year}
             </h3>
             <button
               onClick={nextMonth}
-              className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+              className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
             >
               <ChevronRight size={18} />
             </button>
           </div>
 
           {/* Day headers */}
-          <div className="grid grid-cols-7 border-b border-border">
+          <div className="grid grid-cols-7 border-b border-border bg-muted/20">
             {DAYS.map((d) => (
               <div
                 key={d}
-                className="py-2 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide"
+                className="py-2.5 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide"
               >
                 {d}
               </div>
@@ -172,10 +171,10 @@ export function CalendarPage() {
           <div className="grid grid-cols-7">
             {cells.map((date, i) => {
               if (!date) {
-                return <div key={`empty-${i}`} className="min-h-[80px] border-b border-r border-border/40 last:border-r-0" />;
+                return <div key={`empty-${i}`} className="min-h-[80px] border-b border-r border-border/30 last:border-r-0" />;
               }
 
-              const dayTodos = todosForDate(date);
+              const dayTasks = tasksForDate(date);
               const isToday = isSameDay(date, today);
               const isSelected = isSameDay(date, selectedDate);
               const isCurrentMonth = date.getMonth() === month;
@@ -193,7 +192,7 @@ export function CalendarPage() {
                   `}
                 >
                   <span
-                    className={`text-sm font-medium w-7 h-7 flex items-center justify-center rounded-full leading-none
+                    className={`text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full leading-none
                       ${isToday ? "bg-primary text-primary-foreground" : isSelected ? "text-primary" : "text-foreground"}
                     `}
                   >
@@ -201,34 +200,34 @@ export function CalendarPage() {
                   </span>
 
                   <div className="flex flex-wrap gap-1 mt-auto">
-                    {dayTodos.slice(0, 3).map((todo) => (
+                    {dayTasks.slice(0, 3).map((task: any) => (
                       <span
-                        key={todo.id}
-                        className={`w-2 h-2 rounded-full shrink-0 ${PRIORITY_DOT[todo.priority]}`}
-                        title={todo.title}
+                        key={task.id}
+                        className={`w-2 h-2 rounded-full shrink-0 ${PRIORITY_DOT[task.priority] || PRIORITY_DOT.medium}`}
+                        title={task.title}
                       />
                     ))}
-                    {dayTodos.length > 3 && (
+                    {dayTasks.length > 3 && (
                       <span className="text-[10px] text-muted-foreground leading-none self-end">
-                        +{dayTodos.length - 3}
+                        +{dayTasks.length - 3}
                       </span>
                     )}
                   </div>
 
-                  {dayTodos.slice(0, 2).map((todo) => (
+                  {dayTasks.slice(0, 2).map((task: any) => (
                     <span
-                      key={todo.id}
-                      className={`hidden sm:block text-[11px] leading-tight px-1.5 py-0.5 rounded-sm truncate max-w-full
-                        ${todo.completed
+                      key={task.id}
+                      className={`hidden sm:block text-[11px] leading-tight px-1.5 py-0.5 rounded-md truncate max-w-full
+                        ${task.completed || task.status === "completed"
                           ? "line-through text-muted-foreground/60 bg-muted/50"
-                          : todo.priority === "high"
+                          : task.priority === "high"
                           ? "bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300"
-                          : todo.priority === "medium"
+                          : task.priority === "medium"
                           ? "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300"
                           : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
                         }`}
                     >
-                      {todo.title}
+                      {task.title}
                     </span>
                   ))}
                 </button>
@@ -238,53 +237,53 @@ export function CalendarPage() {
         </div>
 
         {/* Day detail panel */}
-        <div className="bg-card border border-border rounded-2xl shadow-sm flex flex-col overflow-hidden">
-          <div className="px-5 py-4 border-b border-border">
+        <div className="bg-card border border-border/80 rounded-2xl shadow-sm flex flex-col overflow-hidden">
+          <div className="px-5 py-4 border-b border-border bg-muted/20">
             <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-0.5">
               {isSelectedToday(selectedDate, today) ? "Today" : DAYS[selectedDate.getDay()]}
             </p>
-            <h4 className="text-xl font-serif font-bold text-foreground">
+            <h4 className="text-lg font-serif font-bold text-foreground">
               {MONTHS[selectedDate.getMonth()]} {selectedDate.getDate()}, {selectedDate.getFullYear()}
             </h4>
           </div>
 
           <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2">
-            {selectedTodos.length === 0 ? (
+            {selectedTasks.length === 0 ? (
               <div className="py-8 text-center text-sm text-muted-foreground">
-                No tasks pinned to this day.
+                No tasks due on this day.
               </div>
             ) : (
-              selectedTodos.map((todo) => (
+              selectedTasks.map((task: any) => (
                 <div
-                  key={todo.id}
-                  className={`flex items-start gap-2 p-3 rounded-lg border transition-colors
-                    ${todo.completed ? "bg-muted/30 border-border/50 opacity-60" : "bg-background border-border hover:border-primary/30"}
+                  key={task.id}
+                  className={`flex items-start gap-2 p-3 rounded-xl border transition-colors
+                    ${task.completed || task.status === "completed" ? "bg-muted/30 border-border/50 opacity-60" : "bg-background border-border hover:border-primary/30"}
                   `}
                 >
                   <button
-                    onClick={() => toggleComplete.mutate({ id: todo.id })}
-                    className={`shrink-0 mt-0.5 w-5 h-5 rounded border flex items-center justify-center transition-colors
-                      ${todo.completed ? "bg-primary border-primary text-primary-foreground" : "border-input hover:border-primary/50"}
+                    onClick={() => toggleComplete.mutate({ id: task.id })}
+                    className={`shrink-0 mt-0.5 w-5 h-5 rounded-md border flex items-center justify-center transition-colors
+                      ${task.completed || task.status === "completed" ? "bg-primary border-primary text-primary-foreground" : "border-input hover:border-primary/50"}
                     `}
                   >
-                    {todo.completed && <Check size={12} />}
+                    {(task.completed || task.status === "completed") && <Check size={12} />}
                   </button>
                   <div className="flex-1 min-w-0">
-                    <p className={`text-sm font-medium leading-snug ${todo.completed ? "line-through text-muted-foreground" : "text-foreground"}`}>
-                      {todo.title}
+                    <p className={`text-sm font-medium leading-snug ${task.completed || task.status === "completed" ? "line-through text-muted-foreground" : "text-foreground"}`}>
+                      {task.title}
                     </p>
                     <Badge
                       variant="outline"
-                      className={`mt-1 text-[10px] font-normal px-1.5 py-0
-                        ${todo.priority === "high" ? "text-rose-600 border-rose-200 bg-rose-50 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-900" :
-                          todo.priority === "medium" ? "text-amber-600 border-amber-200 bg-amber-50 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-900" :
+                      className={`mt-1 text-[10px] font-medium px-1.5 py-0 rounded-md
+                        ${task.priority === "high" ? "text-rose-600 border-rose-200 bg-rose-50 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-900" :
+                          task.priority === "medium" ? "text-amber-600 border-amber-200 bg-amber-50 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-900" :
                           "text-slate-500 border-slate-200 bg-slate-50 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"}`}
                     >
-                      {todo.priority}
+                      {task.priority || "medium"}
                     </Badge>
                   </div>
                   <button
-                    onClick={() => deleteTodo.mutate({ id: todo.id })}
+                    onClick={() => deleteTask.mutate({ id: task.id })}
                     className="shrink-0 p-1 text-muted-foreground hover:text-destructive rounded transition-colors"
                   >
                     <Trash2 size={13} />
@@ -295,21 +294,21 @@ export function CalendarPage() {
           </div>
 
           {/* Add task form */}
-          <div className="px-4 pb-4 pt-2 border-t border-border mt-auto">
+          <div className="px-4 pb-4 pt-3 border-t border-border mt-auto bg-muted/10">
             <form onSubmit={handleAddTask} className="flex gap-2">
               <Input
                 type="text"
-                placeholder="Add task for this day..."
+                placeholder="Add task for this date..."
                 value={newTitle}
                 onChange={(e) => setNewTitle(e.target.value)}
-                disabled={createTodo.isPending}
-                className="flex-1 text-sm bg-background"
+                disabled={createTask.isPending}
+                className="flex-1 text-sm bg-background rounded-xl"
               />
               <Button
                 type="submit"
                 size="icon"
-                disabled={!newTitle.trim() || createTodo.isPending}
-                className="shrink-0 rounded-lg"
+                disabled={!newTitle.trim() || createTask.isPending}
+                className="shrink-0 rounded-xl"
               >
                 <Plus size={16} />
               </Button>

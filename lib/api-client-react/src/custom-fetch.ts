@@ -66,7 +66,12 @@ function applyBaseUrl(input: RequestInfo | URL): RequestInfo | URL {
   // Only prepend to relative paths (starting with /)
   if (!url.startsWith("/")) return input;
 
-  const absolute = `${_baseUrl}${url}`;
+  let cleanBase = _baseUrl;
+  if (cleanBase.endsWith("/api") && (url === "/api" || url.startsWith("/api/"))) {
+    cleanBase = cleanBase.slice(0, -4);
+  }
+
+  const absolute = `${cleanBase}${url}`;
   if (typeof input === "string") return absolute;
   if (isUrl(input)) return new URL(absolute);
   return new Request(absolute, input as Request);

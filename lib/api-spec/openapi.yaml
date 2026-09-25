@@ -1,17 +1,20 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: Todo App API specification
+  description: Task Manager Suite API specification
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication operations
+  - name: tasks
+    description: Task operations
   - name: todos
-    description: Todo operations
+    description: Legacy todo operations
 paths:
   /healthz:
     get:
@@ -27,24 +30,308 @@ paths:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
 
-  /todos:
+  /auth/register:
+    post:
+      operationId: registerUser
+      tags: [auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterInput"
+      responses:
+        "201":
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthUserResponse"
+        "400":
+          description: Validation error or user already exists
+
+  /auth/login:
+    post:
+      operationId: loginUser
+      tags: [auth]
+      summary: Login a user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthUserResponse"
+        "401":
+          description: Invalid credentials
+
+  /auth/me:
     get:
-      operationId: listTodos
-      tags: [todos]
-      summary: List all todos
+      operationId: getMe
+      tags: [auth]
+      summary: Get currently authenticated user profile
+      responses:
+        "200":
+          description: Current user profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Unauthorized
+
+  /auth/logout:
+    post:
+      operationId: logoutUser
+      tags: [auth]
+      summary: Logout user
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /tasks:
+    get:
+      operationId: listTasks
+      tags: [tasks]
+      summary: List tasks with filtering and search
       parameters:
         - name: status
           in: query
           required: false
           schema:
             type: string
-            enum: [all, active, completed]
+            enum: [all, active, todo, in-progress, completed]
         - name: priority
           in: query
           required: false
           schema:
             type: string
             enum: [low, medium, high]
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: sortBy
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [createdAt, dueDate, priority, title]
+      responses:
+        "200":
+          description: List of tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Task"
+    post:
+      operationId: createTask
+      tags: [tasks]
+      summary: Create a new task
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskInput"
+      responses:
+        "201":
+          description: Task created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+
+  /tasks/clear-completed:
+    delete:
+      operationId: clearCompletedTasks
+      tags: [tasks]
+      summary: Delete all completed tasks
+      responses:
+        "200":
+          description: Count of deleted tasks
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClearCompletedResult"
+
+  /tasks/stats:
+    get:
+      operationId: getTaskStats
+      tags: [tasks]
+      summary: Get task statistics
+      responses:
+        "200":
+          description: Task statistics summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskStats"
+
+  /tasks/{id}:
+    get:
+      operationId: getTask
+      tags: [tasks]
+      summary: Get task by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Task item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+        "404":
+          description: Task not found
+    put:
+      operationId: updateTaskPut
+      tags: [tasks]
+      summary: Replace a task
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskUpdate"
+      responses:
+        "200":
+          description: Updated task
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+        "404":
+          description: Task not found
+    patch:
+      operationId: updateTaskPatch
+      tags: [tasks]
+      summary: Patch a task
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskUpdate"
+      responses:
+        "200":
+          description: Updated task
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+        "404":
+          description: Task not found
+    delete:
+      operationId: deleteTask
+      tags: [tasks]
+      summary: Delete a task
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Task deleted
+        "404":
+          description: Task not found
+
+  /tasks/{id}/status:
+    patch:
+      operationId: updateTaskStatus
+      tags: [tasks]
+      summary: Update task status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskStatusUpdate"
+      responses:
+        "200":
+          description: Updated task
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+        "404":
+          description: Task not found
+
+  /tasks/{id}/complete:
+    patch:
+      operationId: toggleTaskComplete
+      tags: [tasks]
+      summary: Toggle task complete status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Updated task
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+        "404":
+          description: Task not found
+
+  /todos:
+    get:
+      operationId: listTodos
+      tags: [todos]
+      summary: List todos (alias for tasks)
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: priority
+          in: query
+          required: false
+          schema:
+            type: string
       responses:
         "200":
           description: List of todos
@@ -57,7 +344,7 @@ paths:
     post:
       operationId: createTodo
       tags: [todos]
-      summary: Create a new todo
+      summary: Create todo (alias for tasks)
       requestBody:
         required: true
         content:
@@ -66,7 +353,7 @@ paths:
               $ref: "#/components/schemas/TodoInput"
       responses:
         "201":
-          description: Created todo
+          description: Todo created
           content:
             application/json:
               schema:
@@ -76,10 +363,10 @@ paths:
     delete:
       operationId: clearCompleted
       tags: [todos]
-      summary: Delete all completed todos
+      summary: Delete completed todos
       responses:
         "200":
-          description: Number of deleted todos
+          description: Deleted count
           content:
             application/json:
               schema:
@@ -92,7 +379,7 @@ paths:
       summary: Get todo statistics
       responses:
         "200":
-          description: Todo statistics summary
+          description: Todo stats
           content:
             application/json:
               schema:
@@ -102,7 +389,7 @@ paths:
     get:
       operationId: getTodo
       tags: [todos]
-      summary: Get a todo by ID
+      summary: Get todo by ID
       parameters:
         - name: id
           in: path
@@ -121,7 +408,7 @@ paths:
     patch:
       operationId: updateTodo
       tags: [todos]
-      summary: Update a todo
+      summary: Update todo
       parameters:
         - name: id
           in: path
@@ -146,7 +433,7 @@ paths:
     delete:
       operationId: deleteTodo
       tags: [todos]
-      summary: Delete a todo
+      summary: Delete todo
       parameters:
         - name: id
           in: path
@@ -163,7 +450,7 @@ paths:
     patch:
       operationId: toggleTodoComplete
       tags: [todos]
-      summary: Toggle todo completion status
+      summary: Toggle todo complete
       parameters:
         - name: id
           in: path
@@ -184,11 +471,181 @@ components:
   schemas:
     HealthStatus:
       type: object
+      required:
+        - status
       properties:
         status:
           type: string
+
+    MessageResponse:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+
+    User:
+      type: object
+      required:
+        - id
+        - email
+        - username
+        - createdAt
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        username:
+          type: string
+        createdAt:
+          type: string
+
+    AuthUserResponse:
+      type: object
+      required:
+        - user
+        - token
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        token:
+          type: string
+
+    RegisterInput:
+      type: object
+      required:
+        - email
+        - username
+        - password
+      properties:
+        email:
+          type: string
+        username:
+          type: string
+        password:
+          type: string
+
+    LoginInput:
+      type: object
+      required:
+        - usernameOrEmail
+        - password
+      properties:
+        usernameOrEmail:
+          type: string
+        password:
+          type: string
+
+    Task:
+      type: object
+      required:
+        - id
+        - title
+        - status
+        - completed
+        - priority
+        - createdAt
+      properties:
+        id:
+          type: integer
+        userId:
+          type: ["integer", "null"]
+        title:
+          type: string
+        description:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [todo, in-progress, completed]
+        completed:
+          type: boolean
+        priority:
+          type: string
+          enum: [low, medium, high]
+        dueDate:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    TaskInput:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+        description:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [todo, in-progress, completed]
+        priority:
+          type: string
+          enum: [low, medium, high]
+        dueDate:
+          type: ["string", "null"]
+
+    TaskUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [todo, in-progress, completed]
+        completed:
+          type: boolean
+        priority:
+          type: string
+          enum: [low, medium, high]
+        dueDate:
+          type: ["string", "null"]
+
+    TaskStatusUpdate:
+      type: object
       required:
         - status
+      properties:
+        status:
+          type: string
+          enum: [todo, in-progress, completed]
+
+    ClearCompletedResult:
+      type: object
+      required:
+        - deleted
+      properties:
+        deleted:
+          type: integer
+
+    TaskStats:
+      type: object
+      required:
+        - total
+        - completed
+        - active
+        - inProgress
+        - highPriority
+        - dueSoon
+      properties:
+        total:
+          type: integer
+        completed:
+          type: integer
+        active:
+          type: integer
+        inProgress:
+          type: integer
+        highPriority:
+          type: integer
+        dueSoon:
+          type: integer
 
     Todo:
       type: object
@@ -201,10 +658,14 @@ components:
       properties:
         id:
           type: integer
+        userId:
+          type: ["integer", "null"]
         title:
           type: string
         description:
           type: ["string", "null"]
+        status:
+          type: string
         completed:
           type: boolean
         priority:
@@ -224,21 +685,19 @@ components:
       properties:
         title:
           type: string
-          minLength: 1
         description:
-          type: string
+          type: ["string", "null"]
         priority:
           type: string
           enum: [low, medium, high]
         dueDate:
-          type: string
+          type: ["string", "null"]
 
     TodoUpdate:
       type: object
       properties:
         title:
           type: string
-          minLength: 1
         description:
           type: ["string", "null"]
         completed:
@@ -248,14 +707,6 @@ components:
           enum: [low, medium, high]
         dueDate:
           type: ["string", "null"]
-
-    ClearCompletedResult:
-      type: object
-      required:
-        - deleted
-      properties:
-        deleted:
-          type: integer
 
     TodoStats:
       type: object
