@@ -1,4 +1,5 @@
 {
+  "name": "task-manager-suite",
   "framework": "vite",
   "buildCommand": "pnpm --filter @workspace/todo-app run build",
   "installCommand": "pnpm install",
