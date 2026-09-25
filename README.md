@@ -1,6 +1,8 @@
 # Task-Manager-Suite
 
-A full-stack, production-ready Task Management Application built with **React, TypeScript, Express, Drizzle ORM, Zod, and Tailwind CSS**.
+A full-stack, production-ready Task Management Application built with **React 19, TypeScript, Express 5, Drizzle ORM, Zod, and Tailwind CSS**.
+
+- **GitHub Repository**: [https://github.com/navyasree-1234/Task-Manager-Suite](https://github.com/navyasree-1234/Task-Manager-Suite)
 
 ---
 
@@ -17,7 +19,7 @@ A full-stack, production-ready Task Management Application built with **React, T
 
 ## Features
 
-- **Authentication & Authorization**: User registration, login with JWT tokens, password hashing with bcrypt, protected routes, and profile retrieval (`/api/auth/me`).
+- **Authentication & Protection**: User registration, login with JWT tokens, password hashing with bcrypt, protected routes, and profile retrieval (`/api/auth/me`). Unauthenticated users are strictly restricted to login/register.
 - **Task Management**: Create, view, edit, update status (`To Do`, `In Progress`, `Completed`), toggle completion, assign due dates, and delete tasks.
 - **Filters & Search**: Filter tasks by status and priority, search by keyword, and sort by date created, due date, priority, or title.
 - **Productivity Dashboard & Stats**: Visual metrics showing total, active, in-progress, completed, high priority, and upcoming due tasks.
@@ -58,7 +60,7 @@ VITE_API_URL=http://localhost:5000/api
 
 ### 3. Run the Backend API Server
 
-In terminal 1:
+In Terminal 1:
 
 ```powershell
 pnpm --filter @workspace/api-server run start
@@ -68,7 +70,7 @@ The API server will start at: `http://localhost:5000` (Health check: `http://loc
 
 ### 4. Run the Frontend Development Server
 
-In terminal 2:
+In Terminal 2:
 
 ```powershell
 pnpm --filter @workspace/todo-app run dev --port 3000
@@ -88,6 +90,32 @@ The frontend application will start at: `http://localhost:3000`
 | `pnpm --filter @workspace/api-server run dev` | Build and start the backend API server in development mode |
 | `pnpm --filter @workspace/todo-app run dev` | Start the Vite frontend development server |
 | `pnpm --filter @workspace/api-spec run codegen` | Regenerate React Query hooks and Zod schemas from `openapi.yaml` |
+
+---
+
+## Deployment Guide
+
+### Backend Deployment (Render)
+1. Go to **[dashboard.render.com](https://dashboard.render.com)** -> Click **New +** -> **Web Service**.
+2. Connect your GitHub repository `navyasree-1234/Task-Manager-Suite`.
+3. Configuration:
+   - **Root Directory**: `artifacts/api-server`
+   - **Build Command**: `pnpm install && pnpm run build`
+   - **Start Command**: `pnpm run start`
+   - **Environment Variables**:
+     - `PORT` = `5000`
+     - `JWT_SECRET` = `task-manager-suite-secret-key-2026`
+     - `DATABASE_URL` = *(Optional: Postgres connection string)*
+
+### Frontend Deployment (Vercel)
+1. Go to **[vercel.com/new](https://vercel.com/new)** -> Import `navyasree-1234/Task-Manager-Suite`.
+2. Configuration:
+   - **Root Directory**: `artifacts/todo-app`
+   - **Framework Preset**: `Vite`
+   - **Build Command**: `pnpm run build`
+   - **Output Directory**: `dist/public`
+   - **Environment Variable**:
+     - `VITE_API_URL` = `https://<YOUR_RENDER_BACKEND_URL>/api`
 
 ---
 
