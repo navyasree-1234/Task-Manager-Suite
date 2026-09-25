@@ -1,7 +1,15 @@
 {
-  "name": "task-manager-suite",
-  "framework": "vite",
   "buildCommand": "pnpm --filter @workspace/todo-app run build",
   "installCommand": "pnpm install",
-  "outputDirectory": "artifacts/todo-app/dist/public"
+  "outputDirectory": "artifacts/todo-app/dist/public",
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api"
+    },
+    {
+      "source": "/((?!api|assets|favicon.ico).*)",
+      "destination": "/index.html"
+    }
+  ]
 }

@@ -16,9 +16,19 @@ if (dbUrl && (dbUrl.startsWith("postgres://") || dbUrl.startsWith("postgresql://
   const pool = new Pool({ connectionString: dbUrl });
   dbInstance = drizzlePg(pool, { schema });
 } else {
-  const dbDir = path.resolve(process.cwd(), ".data");
-  if (!fs.existsSync(dbDir)) {
-    fs.mkdirSync(dbDir, { recursive: true });
+  let dbDir: string;
+  try {
+    const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+    const baseDir = isServerless ? "/tmp" : process.cwd();
+    dbDir = path.resolve(baseDir, ".data");
+    if (!fs.existsSync(dbDir)) {
+      fs.mkdirSync(dbDir, { recursive: true });
+    }
+  } catch (err) {
+    dbDir = path.resolve("/tmp", ".data");
+    if (!fs.existsSync(dbDir)) {
+      fs.mkdirSync(dbDir, { recursive: true });
+    }
   }
   const client = new PGlite(path.join(dbDir, "pglite_data"));
   dbInstance = drizzlePglite(client, { schema });
