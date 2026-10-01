@@ -25,7 +25,15 @@ app.use(
     },
   }),
 );
-app.use(cors());
+const allowedOrigin = process.env.CLIENT_ORIGIN || process.env.CORS_ORIGIN;
+app.use(
+  cors({
+    origin: allowedOrigin ? (allowedOrigin.includes(",") ? allowedOrigin.split(",") : allowedOrigin) : true,
+    credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  })
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

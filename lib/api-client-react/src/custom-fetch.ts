@@ -17,6 +17,11 @@ const DEFAULT_JSON_ACCEPT = "application/json, application/problem+json";
 
 let _baseUrl: string | null = null;
 let _authTokenGetter: AuthTokenGetter | null = null;
+let _onUnauthorizedHandler: (() => void) | null = null;
+
+export function setOnUnauthorized(handler: (() => void) | null): void {
+  _onUnauthorizedHandler = handler;
+}
 
 /**
  * Set a base URL that is prepended to every relative request URL
@@ -369,6 +374,9 @@ export async function customFetch<T = unknown>(
 
   if (!response.ok) {
     const errorData = await parseErrorBody(response, method);
+    if (response.status === 401 && _onUnauthorizedHandler && !requestInfo.url.includes("/auth/login") && !requestInfo.url.includes("/auth/register")) {
+      _onUnauthorizedHandler();
+    }
     throw new ApiError(response, errorData, requestInfo);
   }
 

@@ -1,0 +1,30 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Start Backend Server",
+      "type": "shell",
+      "command": "pnpm --filter @workspace/api-server run dev",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "Start Frontend App",
+      "type": "shell",
+      "command": "pnpm --filter @workspace/todo-app run dev",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "Start Full App (Backend + Frontend)",
+      "dependsOn": [
+        "Start Backend Server",
+        "Start Frontend App"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    }
+  ]
+}

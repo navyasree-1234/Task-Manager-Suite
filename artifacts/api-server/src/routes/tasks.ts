@@ -41,8 +41,7 @@ async function handleGetStats(req: any, res: any): Promise<void> {
   const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
   const sevenDaysStr = sevenDaysFromNow.toISOString().split("T")[0];
 
-  let allTodos: DbTodo[] = await db.select().from(todosTable);
-  allTodos = allTodos.filter((t: DbTodo) => t.userId === userId);
+  const allTodos: DbTodo[] = await db.select().from(todosTable).where(eq(todosTable.userId, userId));
 
   const total = allTodos.length;
   const completed = allTodos.filter((t: DbTodo) => t.status === "completed" || t.completed).length;
@@ -88,8 +87,7 @@ async function handleListTasks(req: any, res: any): Promise<void> {
   const { status, priority, search, sortBy } = req.query;
   const userId = req.user.id;
 
-  let todos: DbTodo[] = await db.select().from(todosTable);
-  todos = todos.filter((t: DbTodo) => t.userId === userId);
+  let todos: DbTodo[] = await db.select().from(todosTable).where(eq(todosTable.userId, userId));
 
   // Filter by status
   if (status && status !== "all") {

@@ -12,6 +12,8 @@ const dbUrl = process.env.DATABASE_URL;
 
 let dbInstance: any;
 
+let pgliteClient: PGlite | null = null;
+
 if (dbUrl && (dbUrl.startsWith("postgres://") || dbUrl.startsWith("postgresql://"))) {
   const pool = new Pool({ connectionString: dbUrl });
   dbInstance = drizzlePg(pool, { schema });
@@ -30,8 +32,17 @@ if (dbUrl && (dbUrl.startsWith("postgres://") || dbUrl.startsWith("postgresql://
       fs.mkdirSync(dbDir, { recursive: true });
     }
   }
-  const client = new PGlite(path.join(dbDir, "pglite_data"));
-  dbInstance = drizzlePglite(client, { schema });
+  const pglitePath = path.join(dbDir, "pglite_data");
+  const pidPath = path.join(pglitePath, "postmaster.pid");
+  if (fs.existsSync(pidPath)) {
+    try {
+      fs.unlinkSync(pidPath);
+    } catch (_e) {
+      // ignore
+    }
+  }
+  pgliteClient = new PGlite(pglitePath);
+  dbInstance = drizzlePglite(pgliteClient, { schema });
 }
 
 export const db = dbInstance;
@@ -40,6 +51,9 @@ let isInitialized = false;
 
 export async function initDb() {
   if (isInitialized) return;
+  if (pgliteClient) {
+    await pgliteClient.waitReady;
+  }
   try {
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS users (
